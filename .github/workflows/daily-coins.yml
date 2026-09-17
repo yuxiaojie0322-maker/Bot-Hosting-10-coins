@@ -66,6 +66,16 @@ jobs:
           cd private-scripts
           xvfb-run --auto-servernum --server-args="-screen 0 1440x900x24" python daily_coins.py
 
+      - name: Upload screenshots and debug artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coins-screenshots
+          path: |
+            private-scripts/*.jpg
+            private-scripts/*.png
+          retention-days: 3
+
       - name: Delete old workflow runs
         uses: Mattraks/delete-workflow-runs@v2
         if: always()
