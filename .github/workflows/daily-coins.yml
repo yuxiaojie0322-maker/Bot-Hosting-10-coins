@@ -2,9 +2,12 @@ name: Bot-Hosting Daily Coins
 
 on:
   schedule:
-    # 北京时间每天早上 09:00 (UTC 01:00)，留出 GitHub Actions 调度延迟的余量
-    - cron: '0 1 1 1 *'
+    # 每天北京时间 08:05 (UTC 00:05)，每日重置后自动运行
+    - cron: '5 0 * * *'
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
