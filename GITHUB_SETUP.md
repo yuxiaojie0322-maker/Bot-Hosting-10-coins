@@ -13,6 +13,10 @@
 在仓库的 **Settings → Secrets and variables → Actions** 中添加：
 - **名称**: `BOT_HOSTING_TOKEN`
 - **值**: 你的Bot-Hosting token（就是那个eyJ开头的字符串）
+- **名称**: `GH_PAT_PRIVATE_REPO`（或 `CORE_SCRIPT_TOKEN`）
+- **值**: 具备读取私有仓库 `my-private-scripts` 权限的 GitHub Personal Access Token (PAT)
+- **（可选）名称**: `TG_BOT_TOKEN`、`TG_CHAT_ID`（Telegram 消息推送）
+- **（可选）名称**: `NOPECHA_KEY`（NopeCHA 验证码自动过验 Key）
 
 ### 4. 启用Workflow
 GitHub会自动启用，也可以手动在Actions标签页启用

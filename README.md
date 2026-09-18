@@ -1,17 +1,17 @@
 # Bot-Hosting Daily Coins (Workflow 仓库)
 
-> ⚠️ 本仓库**只包含 GitHub Actions workflow**，核心脚本已转移到 **Private 仓库 [bh-scripts](https://github.com/yuxiaojie0322-maker/bh-scripts)** 以保护 token 和业务逻辑。
+> ⚠️ 本仓库**只包含 GitHub Actions workflow**，核心脚本已转移到 **Private 仓库 [my-private-scripts (bh-scripts 目录)](https://github.com/yuxiaojie0322-maker/my-private-scripts)** 以保护 token 和业务逻辑。
 
 ## 用途
 
-每天北京时间 09:00（UTC 01:00）自动领取 [Bot-Hosting.net](https://legacy.bot-hosting.net) 每日免费金币，并通过 Telegram 推送结果。
+每天北京时间 08:05（UTC 00:05）自动领取 [Bot-Hosting.net](https://legacy.bot-hosting.net) 每日免费金币，并通过 Telegram 推送结果。
 
 ## 运行机制
 
 | 步骤 | 内容 |
 |------|------|
 | 1 | Checkout 本仓库（workflow 本身） |
-| 2 | Checkout Private 仓库 `bh-scripts`（拿 `daily_coins.py`） |
+| 2 | Checkout Private 仓库 `my-private-scripts`（获取 `bh-scripts/daily_coins.py`） |
 | 3 | 安装 Python + Playwright + xvfb |
 | 4 | 下载 NopeCHA 扩展（用于自动解 hCaptcha） |
 | 5 | 运行 `daily_coins.py` |
@@ -23,7 +23,7 @@
 
 | Secret 名 | 用途 |
 |-----------|------|
-| `GH_PAT_PRIVATE_REPO` | 用于访问 Private `bh-scripts` 的 PAT（需要 `repo` scope，或 fine-grained token 只授予对 `bh-scripts` 的 read） |
+| `GH_PAT_PRIVATE_REPO` 或 `CORE_SCRIPT_TOKEN` | 用于访问 Private `my-private-scripts` 的 PAT（需要具备读取权限） |
 | `BOT_HOSTING_TOKEN` | Bot-Hosting.net JWT token |
 | `NOPECHA_KEY` | NopeCHA API key（用于 hCaptcha） |
 | `TG_BOT_TOKEN` | Telegram Bot Token |

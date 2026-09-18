@@ -26,12 +26,12 @@ jobs:
           path: public-repo
 
       # 2. checkout Private 仓库（核心脚本）
-      #    需要 GH_PAT_PRIVATE_REPO secret（对 bh-scripts 有只读权限的 PAT）
+      #    支持 GH_PAT_PRIVATE_REPO 或 CORE_SCRIPT_TOKEN secret（对 my-private-scripts 具备只读权限）
       - name: Checkout private scripts
         uses: actions/checkout@v4
         with:
-          repository: yuxiaojie0322-maker/bh-scripts
-          token: ${{ secrets.GH_PAT_PRIVATE_REPO }}
+          repository: yuxiaojie0322-maker/my-private-scripts
+          token: ${{ secrets.GH_PAT_PRIVATE_REPO || secrets.CORE_SCRIPT_TOKEN }}
           path: private-scripts
 
       - name: Set up Python
@@ -51,9 +51,9 @@ jobs:
       - name: Download NopeCHA extension
         run: |
           echo "下载 NopeCHA 插件..."
-          mkdir -p private-scripts/scripts/extensions/nopecha/unpacked
+          mkdir -p private-scripts/bh-scripts/scripts/extensions/nopecha/unpacked
           curl -fLo nopecha.zip https://github.com/NopeCHALLC/nopecha-extension/releases/latest/download/chromium.zip
-          unzip -q -o nopecha.zip -d private-scripts/scripts/extensions/nopecha/unpacked
+          unzip -q -o nopecha.zip -d private-scripts/bh-scripts/scripts/extensions/nopecha/unpacked
           echo "✅ 插件准备就绪"
 
       - name: Run daily coins claimer (Xvfb 虚拟屏幕)
@@ -63,7 +63,7 @@ jobs:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: |
-          cd private-scripts
+          cd private-scripts/bh-scripts
           xvfb-run --auto-servernum --server-args="-screen 0 1440x900x24" python daily_coins.py
 
       - name: Upload screenshots and debug artifacts
@@ -72,8 +72,8 @@ jobs:
         with:
           name: coins-screenshots
           path: |
-            private-scripts/*.jpg
-            private-scripts/*.png
+            private-scripts/bh-scripts/*.jpg
+            private-scripts/bh-scripts/*.png
           retention-days: 3
 
       - name: Delete old workflow runs
