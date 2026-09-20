@@ -12,9 +12,9 @@ on:
         required: false
         default: 'lxy/xapp-go'
       memory:
-        description: '内存配额 (如 128Mi, 256Mi)'
+        description: '内存配额 (如 128MiB, 256MiB)'
         required: false
-        default: '256Mi'
+        default: '256MiB'
       action:
         description: '操作类型'
         required: false
@@ -48,8 +48,8 @@ jobs:
       - name: Install unikraft CLI
         run: |
           set -euo pipefail
-          curl -fsSL https://pkg.unikraft.com/endpoints/cli/content/stable.txt | tr -d '\r\n' > /tmp/ukc_version
-          VERSION=$(cat /tmp/ukc_version)
+          VERSION=$(curl -fsSL https://pkg.unikraft.com/endpoints/cli/content/stable.txt | tr -d '\r\n')
+          VERSION="${VERSION#v}"
           echo "Installing unikraft CLI v${VERSION}"
           curl -fsSL "https://github.com/unikraft-cloud/cli/releases/download/v${VERSION}/unikraft-cli_${VERSION}_linux_amd64.tar.gz" -o /tmp/unikraft.tar.gz
           tar -xzf /tmp/unikraft.tar.gz -C /tmp
@@ -72,7 +72,7 @@ jobs:
           UKC_TOKEN: ${{ secrets.UKC_TOKEN }}
           METRO: ${{ matrix.metro }}
           IMAGE: ${{ github.event.inputs.image || 'lxy/xapp-go' }}
-          MEMORY: ${{ github.event.inputs.memory || '256Mi' }}
+          MEMORY: ${{ github.event.inputs.memory || '256MiB' }}
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: |
@@ -85,18 +85,17 @@ jobs:
           echo "    内存: ${MEMORY}"
           echo "    组织: ${UKC_ORG}"
           
-          # 创建实例
+          # 新 CLI 语法: unikraft run
           echo "==> 创建实例..."
-          RESULT=$(unikraft instance create "${INSTANCE_NAME}" \
+          RESULT=$(unikraft run \
+            --name "${INSTANCE_NAME}" \
             --metro "${METRO}" \
             --image "${FULL_IMAGE}" \
             --memory "${MEMORY}" \
             --vcpus 1 \
-            --scale-to-zero true \
-            --cooldown-time 1000 \
-            --publish 443:8080/http+tls \
-            --publish 80:8080/http \
-            --org "${UKC_ORG}" \
+            --scale-to-zero "policy=on,cooldown-time=1000" \
+            -p 443:8080/http+tls \
+            -p 80:8080/http \
             -o json 2>&1) || true
           
           echo "创建结果: ${RESULT}"
@@ -106,7 +105,7 @@ jobs:
           TIMEOUT=300
           COUNT=0
           while [ $COUNT -lt $TIMEOUT ]; do
-            STATUS=$(unikraft instance get "${INSTANCE_NAME}" -o json 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('state', 'unknown'))" 2>/dev/null || echo "error")
+            STATUS=$(unikraft instances get "${INSTANCE_NAME}" -o json 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('state', 'unknown'))" 2>/dev/null || echo "error")
             echo "[$COUNT/$TIMEOUT] 状态: ${STATUS}"
             if [ "${STATUS}" = "running" ]; then
               break
@@ -121,7 +120,7 @@ jobs:
           fi
           
           # 获取 FQDN
-          FQDN=$(unikraft instance get "${INSTANCE_NAME}" -o json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('fqdn', d.get('domain', 'unknown')))" 2>/dev/null || echo "unknown")
+          FQDN=$(unikraft instances get "${INSTANCE_NAME}" -o json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('fqdn', d.get('domain', 'unknown')))" 2>/dev/null || echo "unknown")
           echo "FQDN: ${FQDN}"
           
           # 冒烟测试
@@ -179,8 +178,8 @@ jobs:
       - name: Install unikraft CLI
         run: |
           set -euo pipefail
-          curl -fsSL https://pkg.unikraft.com/endpoints/cli/content/stable.txt | tr -d '\r\n' > /tmp/ukc_version
-          VERSION=$(cat /tmp/ukc_version)
+          VERSION=$(curl -fsSL https://pkg.unikraft.com/endpoints/cli/content/stable.txt | tr -d '\r\n')
+          VERSION="${VERSION#v}"
           curl -fsSL "https://github.com/unikraft-cloud/cli/releases/download/v${VERSION}/unikraft-cli_${VERSION}_linux_amd64.tar.gz" -o /tmp/unikraft.tar.gz
           tar -xzf /tmp/unikraft.tar.gz -C /tmp
           chmod +x /tmp/unikraft
@@ -202,7 +201,7 @@ jobs:
           echo "==> 清理不在保留列表中的实例..."
           echo "保留 metro: ${KEEP_METROS}"
           
-          INSTANCES=$(unikraft instance list -o json 2>/dev/null || echo "[]")
+          INSTANCES=$(unikraft instances list -o json 2>/dev/null || echo "[]")
           
           echo "${INSTANCES}" | python3 -c "
           import sys, json, subprocess
@@ -216,7 +215,7 @@ jobs:
               name = inst.get('name', '')
               if metro not in keep_metros:
                   print(f'删除实例: {name} (metro: {metro})')
-                  subprocess.run(['unikraft', 'instance', 'delete', name], check=False)
+                  subprocess.run(['unikraft', 'instances', 'delete', name], check=False)
                   deleted.append(name)
               else:
                   print(f'保留实例: {name} (metro: {metro})')
